@@ -2,98 +2,72 @@ package com.example.tidalapplication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
+import android.app.Activity;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.widget.FrameLayout;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import com.example.tidalapplication.databinding.ActivityMainBinding;
+import com.example.tidalapplication.fragments.AddPage;
+import com.example.tidalapplication.fragments.HomePage;
+import com.example.tidalapplication.fragments.ProfilePage;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
 
 import java.io.IOException;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
-        GoogleMap.OnMapClickListener {
+public class MainActivity extends AppCompatActivity {
 
-    private GoogleMap myMap;
-    private SearchView mapSearchView;
+    //ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
-        mapSearchView = findViewById(R.id.mapSearch);
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        bottomNav.setSelectedItemId(R.id.nav_home);
+        bottomNav.setOnItemSelectedListener(navListener);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        Fragment selectedFragment = new HomePage();
 
-        mapSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-
-                String location = mapSearchView.getQuery().toString();
-                List<Address> addressList = null;
-
-                if (location != null) {
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-
-                    try {
-                        addressList = geocoder.getFromLocationName(location, 1);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    Address address = addressList.get(0);
-                    LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-                    myMap.addMarker(new MarkerOptions().position(latLng).title(location));
-                    myMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
-                }
-
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String s) {
-                return false;
-            }
-        });
-    }
-
-    @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-
-        myMap = googleMap;
-
-        LatLng hk = new LatLng(22.3193, 114.1694);
-        myMap.addMarker(new MarkerOptions().position(hk).title("Hong Kong"));
-        myMap.moveCamera(CameraUpdateFactory.newLatLng(hk));
-        myMap.animateCamera(CameraUpdateFactory.newLatLngZoom(hk, 11.0f));
-
-        myMap.getUiSettings().setZoomControlsEnabled(true);
-        myMap.getUiSettings().setCompassEnabled(true);
-
-        myMap.setOnMapClickListener(this);
-
-
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, selectedFragment).commit();
 
     }
 
-    @Override
-    public void onMapClick(@NonNull LatLng latLng) {
-        Toast.makeText(this, latLng.latitude + ", " + latLng.longitude, Toast.LENGTH_SHORT).show();
+    private NavigationBarView.OnItemSelectedListener navListener = item -> {
+        int itemId = item.getItemId();
 
-        myMap.clear();
-        myMap.addMarker(new MarkerOptions().position(latLng));
-        //myMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-    }
+        Fragment selectedFragment = null;
+
+        if (itemId == R.id.nav_home) {
+            selectedFragment = new HomePage();
+        } else if (itemId == R.id.nav_add) {
+            selectedFragment = new AddPage();
+        } else if (itemId == R.id.nav_profile) {
+            selectedFragment = new ProfilePage();
+        }
+
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, selectedFragment).commit();
+
+        return  true;
+    };
 }
