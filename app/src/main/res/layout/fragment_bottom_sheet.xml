@@ -1,0 +1,40 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <TextView
+        android:id="@+id/tideLevelText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tide Level: "
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/dateTimeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Selected Date &amp; Time: "
+        android:textSize="16sp"
+        android:layout_marginTop="16dp"/>
+
+    <Button
+        android:id="@+id/pickDateTimeButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Set Date &amp; Time"
+        android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/downloadButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Download Tide Data"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@android:color/holo_blue_light"
+        android:textColor="@android:color/white"/>
+
+</LinearLayout>

@@ -1,19 +1,76 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    tools:context=".fragments.ProfilePage">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@android:color/white"
+    android:gravity="center"> <!-- Center content vertically -->
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Profile Page"
-        android:textSize="20sp"
-        android:textColor="@color/black"/>
+        android:text="Sign In"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+        android:paddingBottom="24dp"/>
 
-</RelativeLayout>
+    <EditText
+        android:id="@+id/emailEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Email"
+        android:inputType="textEmailAddress"
+        android:padding="12dp"
+        android:background="@drawable/edit_text_background"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/passwordEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Password"
+        android:inputType="textPassword"
+        android:padding="12dp"
+        android:background="@drawable/edit_text_background"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/signInButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sign In"
+        android:backgroundTint="@android:color/holo_blue_light"
+        android:textColor="@android:color/white"
+        android:padding="12dp"/>
+
+    <TextView
+        android:id="@+id/createAccountText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Don't have an account? Create one!"
+        android:textColor="@android:color/holo_blue_dark"
+        android:layout_gravity="center"
+        android:paddingTop="16dp"
+        android:clickable="true"
+        android:focusable="true"/>
+
+    <TextView
+        android:id="@+id/userProfileText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome!"
+        android:textSize="18sp"
+        android:layout_marginTop="24dp"
+        android:visibility="gone"/> <!-- Initially hidden -->
+
+    <Button
+        android:id="@+id/viewDownloadsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="View Downloaded Data"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"/> <!-- Initially hidden -->
+
+</LinearLayout>

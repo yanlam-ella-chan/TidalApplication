@@ -8,11 +8,17 @@
     android:background="@color/white"
     tools:context=".fragments.HomePage">
 
-    <fragment
-        android:layout_height="match_parent"
-        android:layout_width="match_parent"
-        android:id="@+id/google_map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"/>
+    <TextView
+        android:id="@+id/textPengChau"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Siu Kau Yi Chau"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:background="@android:color/transparent"
+        android:padding="1dp"
+        android:visibility="gone"/> <!-- Start as gone -->
 
     <SearchView
         android:id="@+id/mapSearch"
@@ -26,5 +32,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
+
+    <fragment
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/google_map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"/>
+
+
 
 </RelativeLayout>
