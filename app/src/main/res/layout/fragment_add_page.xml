@@ -8,12 +8,87 @@
     android:background="@color/white"
     tools:context=".fragments.AddPage">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Add Page"
-        android:textSize="20sp"
-        android:textColor="@color/black"/>
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:columnCount="2"
+        android:rowCount="2"
+        android:padding="16dp"
+        android:layout_margin="8dp"
+        android:background="@color/light_gray">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_add_place"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:text="Add Place"
+            android:textSize="18sp"
+            android:drawableTop="@drawable/baseline_add_location_alt_24"
+            android:drawablePadding="0dp"
+            android:paddingTop="80dp"
+            android:textColor="@android:color/white"
+            android:background="@drawable/button_background"
+            android:backgroundTint="@null"
+            android:gravity="center"
+            android:minHeight="100dp"
+            android:layout_margin="8dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_update_place"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:text="Update Place"
+            android:textSize="18sp"
+            android:drawableTop="@drawable/baseline_update_24"
+            android:drawablePadding="0dp"
+            android:paddingTop="80dp"
+            android:textColor="@android:color/white"
+        android:background="@drawable/button_background"
+            android:backgroundTint="@null"
+        android:gravity="center"
+        android:minHeight="100dp"
+        android:layout_margin="8dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_add_review"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:text="Add Review"
+            android:textSize="18sp"
+            android:drawableTop="@drawable/baseline_reviews_24"
+            android:drawablePadding="0dp"
+            android:paddingTop="80dp"
+            android:textColor="@android:color/white"
+            android:background="@drawable/button_background"
+            android:backgroundTint="@null"
+            android:gravity="center"
+            android:minHeight="100dp"
+            android:layout_margin="8dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_add_photos"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:text="Add Photos"
+            android:textSize="18sp"
+            android:drawableTop="@drawable/baseline_add_a_photo_24"
+            android:drawablePadding="0dp"
+            android:paddingTop="80dp"
+            android:textColor="@android:color/white"
+        android:background="@drawable/button_background"
+            android:backgroundTint="@null"
+        android:gravity="center"
+        android:minHeight="100dp"
+        android:layout_margin="8dp"/>
+
+    </GridLayout>
 
 </RelativeLayout>

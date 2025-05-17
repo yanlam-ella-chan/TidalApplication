@@ -1,4 +1,4 @@
-package com.example.tidalapplication.adapters;
+package com.example.tidalapplication;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -11,34 +11,40 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.tidalapplication.R;
+import com.example.tidalapplication.fragments.UserProfileFragment.TideInfo;
 
 import java.util.List;
 
-public class TideInfoAdapter extends ArrayAdapter<String[]> {
-    public TideInfoAdapter(Context context, List<String[]> tideInfos) {
-        super(context, 0, tideInfos);
+public class TideInfoAdapter extends ArrayAdapter<TideInfo> {
+    private final Context context;
+    private final List<TideInfo> tideInfoList;
+
+    public TideInfoAdapter(Context context, List<TideInfo> tideInfoList) {
+        super(context, R.layout.item_tide_info, tideInfoList);
+        this.context = context;
+        this.tideInfoList = tideInfoList;
     }
 
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        // Get the data item for this position
-        String[] tideInfo = getItem(position);
-
-        // Check if an existing view is being reused, otherwise inflate the view
+        // Inflate the layout for each list item
         if (convertView == null) {
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_tide_info, parent, false);
+            LayoutInflater inflater = LayoutInflater.from(context);
+            convertView = inflater.inflate(R.layout.item_tide_info, parent, false);
         }
 
-        // Lookup view for data population
-        TextView tideTitle = convertView.findViewById(R.id.tideTitle);
-        TextView tideDate = convertView.findViewById(R.id.tideDate);
+        // Get the current TideInfo object
+        TideInfo currentTideInfo = tideInfoList.get(position);
 
-        // Populate the data into the template view using the data object
-        tideTitle.setText(tideInfo[0]); // Title
-        tideDate.setText(tideInfo[1]); // Date
+        // Set up the views
+        TextView locationNameTextView = convertView.findViewById(R.id.locationNameTextView);
+        TextView dateTextView = convertView.findViewById(R.id.dateTextView);
 
-        // Return the completed view to render on screen
+        // Populate the data into the template view using the TideInfo object
+        locationNameTextView.setText(currentTideInfo.locationName);
+        dateTextView.setText(currentTideInfo.date);
+
         return convertView;
     }
 }

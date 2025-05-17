@@ -4,57 +4,35 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@drawable/beach_background"
-    android:paddingBottom="24dp"
-    android:layout_margin="16dp"
-    android:elevation="8dp">
+    android:minWidth="300dp">
 
-<TextView
-android:id="@+id/dateTimeText"
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:text="Selected Date &amp; Time: None"
-android:textSize="18sp"
-android:textColor="#000000"
-    android:padding="12dp"
-    android:background="#FFFFFF"
-    android:layout_marginBottom="16dp"
-    android:gravity="center"/>
+    <DatePicker
+        android:id="@+id/datePicker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
-<LinearLayout
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:orientation="horizontal"
-android:layout_marginBottom="16dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:gravity="end"> <!-- Align buttons to the end -->
 
-<Button
-    android:id="@+id/pickStartButton"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:layout_weight="1"
-    android:text="Select Start"
-    android:backgroundTint="#FF9800"
-android:textColor="@android:color/white"
-android:padding="12dp"/>
+        <Button
+            android:id="@+id/downloadButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Download Tide Data"
+            android:textColor="@android:color/black"
+            android:background="@android:color/holo_blue_light"
+            android:layout_marginEnd="8dp"/> <!-- Add margin for spacing -->
 
-<Button
-    android:id="@+id/pickEndButton"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:layout_weight="1"
-    android:text="Select End"
-    android:backgroundTint="#FF9800"
-android:textColor="@android:color/white"
-android:padding="12dp"
-android:layout_marginStart="8dp"/>
-</LinearLayout>
-
-<Button
-android:id="@+id/downloadButton"
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:text="Download Tide Data"
-android:backgroundTint="#FF5722"
-    android:textColor="@android:color/white"
-    android:padding="12dp"/>
+        <Button
+            android:id="@+id/cancelButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:textColor="@android:color/black"
+            android:background="@android:color/holo_red_light"/>
     </LinearLayout>
+</LinearLayout>

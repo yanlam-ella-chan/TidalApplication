@@ -29,8 +29,8 @@ public class DownloadedDataFragment extends Fragment {
 
         ListView listView = view.findViewById(R.id.downloadedDataListView);
         downloadedTideData = new ArrayList<>();
-        // Sample data (you can replace this with actual downloaded data)
-        downloadedTideData.add("Tide Data from 07 May 2025 14:00 to 08 May 2025 13:00");
+        // Sample simplified data
+        downloadedTideData.add("Tide Data on 07 May 2025");
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, downloadedTideData);
         listView.setAdapter(adapter);

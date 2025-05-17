@@ -1,7 +1,5 @@
 package com.example.tidalapplication.fragments;
 
-import static android.content.Context.MODE_PRIVATE;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -17,28 +15,29 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tidalapplication.R;
-import com.example.tidalapplication.UserSession; // Import the UserSession class
+import com.example.tidalapplication.UserSession;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class ProfilePage extends Fragment {
 
-    View view;
-    EditText emailEditText, passwordEditText;
-    Button signInButton, viewDownloadsButton;
-    TextView createAccountText, userProfileText;
+    private EditText emailEditText, passwordEditText;
+    private Button signInButton, viewDownloadsButton;
+    private TextView createAccountText;
+    private FirebaseAuth mAuth;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        view = inflater.inflate(R.layout.fragment_profile_page, container, false);
+        View view = inflater.inflate(R.layout.fragment_profile_page, container, false);
 
         emailEditText = view.findViewById(R.id.emailEditText);
         passwordEditText = view.findViewById(R.id.passwordEditText);
         signInButton = view.findViewById(R.id.signInButton);
         createAccountText = view.findViewById(R.id.createAccountText);
-        userProfileText = view.findViewById(R.id.userProfileText);
         viewDownloadsButton = view.findViewById(R.id.viewDownloadsButton);
+
+        mAuth = FirebaseAuth.getInstance(); // Initialize Firebase Auth
 
         signInButton.setOnClickListener(v -> signIn());
         createAccountText.setOnClickListener(v -> navigateToCreateAccount());
@@ -56,48 +55,35 @@ public class ProfilePage extends Fragment {
             return;
         }
 
-        if (authenticateUser(email, password)) {
-            UserSession.isSignedIn = true; // Set the user as signed in
-            saveUserSession(true);
-            Toast.makeText(getActivity(), "Sign In Successful", Toast.LENGTH_SHORT).show();
-            navigateToUserProfile(); // Navigate to user profile fragment
-        } else {
-            Toast.makeText(getActivity(), "Invalid email or password", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void saveUserSession(boolean isSignedIn) {
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean("isSignedIn", isSignedIn);
-        editor.apply();
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        UserSession.isSignedIn = true; // Set the user as signed in
+                        Toast.makeText(getActivity(), "Sign In Successful", Toast.LENGTH_SHORT).show();
+                        navigateToUserProfile(); // Navigate to user profile fragment
+                    } else {
+                        Toast.makeText(getActivity(), "Invalid email or password", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void navigateToUserProfile() {
-        UserProfileFragment userProfileFragment = new UserProfileFragment();
         getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, userProfileFragment)
+                .replace(R.id.fragment_container, new UserProfileFragment())
                 .addToBackStack(null)
                 .commit();
     }
 
-    private boolean authenticateUser(String email, String password) {
-        // Placeholder for actual authentication logic
-        return true; // Replace with actual authentication check
-    }
-
     private void navigateToCreateAccount() {
-        CreateAccountFragment createAccountFragment = new CreateAccountFragment();
         getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, createAccountFragment)
+                .replace(R.id.fragment_container, new CreateAccountFragment())
                 .addToBackStack(null)
                 .commit();
     }
 
     private void navigateToDownloadedData() {
-        DownloadedDataFragment downloadedDataFragment = new DownloadedDataFragment();
         getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, downloadedDataFragment)
+                .replace(R.id.fragment_container, new DownloadedDataFragment())
                 .addToBackStack(null)
                 .commit();
     }

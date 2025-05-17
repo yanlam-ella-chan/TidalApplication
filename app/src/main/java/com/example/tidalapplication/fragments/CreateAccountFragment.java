@@ -13,12 +13,14 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.tidalapplication.R;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class CreateAccountFragment extends Fragment {
 
-    View view;
-    EditText emailEditText, passwordEditText;
-    Button createAccountButton, backButton;
+    private View view;
+    private EditText emailEditText, passwordEditText;
+    private Button createAccountButton, backButton;
+    private FirebaseAuth mAuth;
 
     @Nullable
     @Override
@@ -30,7 +32,9 @@ public class CreateAccountFragment extends Fragment {
         emailEditText = view.findViewById(R.id.emailEditText);
         passwordEditText = view.findViewById(R.id.passwordEditText);
         createAccountButton = view.findViewById(R.id.createAccountButton);
-        backButton = view.findViewById(R.id.backButton); // Add a back button
+        backButton = view.findViewById(R.id.backButton);
+
+        mAuth = FirebaseAuth.getInstance(); // Initialize Firebase Auth
 
         createAccountButton.setOnClickListener(v -> createAccount());
         backButton.setOnClickListener(v -> navigateBackToSignIn());
@@ -47,17 +51,24 @@ public class CreateAccountFragment extends Fragment {
             return;
         }
 
-        // Handle account creation logic here (e.g., save user to database)
-        Toast.makeText(getActivity(), "Account Created", Toast.LENGTH_SHORT).show();
-
-        // Optional: Navigate back to sign in after successful account creation
-        navigateBackToSignIn();
+        // Create a new user account with Firebase Authentication
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(getActivity(), "Account Created Successfully", Toast.LENGTH_SHORT).show();
+                        navigateBackToSignIn(); // Navigate back to sign in after successful account creation
+                    } else {
+                        String error = task.getException() != null ? task.getException().getMessage() : "Unknown error";
+                        Toast.makeText(getActivity(), "Account Creation Failed: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void navigateBackToSignIn() {
         // Navigate back to the ProfilePage fragment
         getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new ProfilePage()) // Ensure you specify the correct container
+                .replace(R.id.fragment_container, new ProfilePage())
+                .addToBackStack(null) // Optional: add to back stack
                 .commit();
     }
 }
