@@ -2,10 +2,12 @@ package com.example.tidalapplication;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -49,6 +51,8 @@ public class PhotosFragment extends Fragment {
     private PhotosAdapter adapter;
 
     private ImageView photoImageView;
+
+    private static final int REQUEST_CAMERA_PERMISSION = 100;
 
     // Update constructor to accept locationId
     public PhotosFragment(String locationId) {
@@ -139,6 +143,7 @@ public class PhotosFragment extends Fragment {
 
         photoImageView = dialog.findViewById(R.id.photoImageView);
         Button selectPhotoButton = dialog.findViewById(R.id.selectPhotoButton);
+        Button takePhotoButton = dialog.findViewById(R.id.takePhotoButton);
         Button addButton = dialog.findViewById(R.id.addButton);
         Button cancelButton = dialog.findViewById(R.id.cancelButton);
         SeekBar tideLevelSeekBar = dialog.findViewById(R.id.tideLevelSeekBar);
@@ -166,6 +171,8 @@ public class PhotosFragment extends Fragment {
 
         selectPhotoButton.setOnClickListener(v -> openFileChooser());
 
+        takePhotoButton.setOnClickListener(v -> openCamera());
+
         addButton.setOnClickListener(v -> {
             if (selectedImageUri != null) {
                 uploadPhoto(selectedImageUri, tideLevel[0]); // Upload photo with tide level
@@ -178,6 +185,15 @@ public class PhotosFragment extends Fragment {
         cancelButton.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
+    }
+
+    private void openCamera() {
+        if (getContext().checkSelfPermission(android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            startActivityForResult(cameraIntent, PICK_IMAGE_REQUEST);
+        } else {
+            requestPermissions(new String[]{android.Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+        }
     }
 
     private void uploadPhoto(Uri photoUri, float tideLevel) {

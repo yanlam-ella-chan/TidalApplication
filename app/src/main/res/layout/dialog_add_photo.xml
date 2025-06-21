@@ -45,13 +45,26 @@
         android:background="@android:color/darker_gray"
         android:src="@drawable/baseline_add_a_photo_24"/>
 
-    <Button
-        android:id="@+id/selectPhotoButton"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Select Photo"
-        android:layout_gravity="center"
-        android:layout_marginTop="16dp"/>
+        android:orientation="horizontal"
+        android:layout_gravity="center">
+
+        <Button
+            android:id="@+id/selectPhotoButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Photo"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="30dp"/>
+
+        <Button
+            android:id="@+id/takePhotoButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Take a Photo"/>
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tideLevelText"
@@ -74,5 +87,4 @@
         android:text="0.0"
         android:layout_gravity="center"
         android:layout_marginTop="8dp"/>
-
 </LinearLayout>
