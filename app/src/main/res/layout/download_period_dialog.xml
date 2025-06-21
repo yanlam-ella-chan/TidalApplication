@@ -22,7 +22,7 @@
             android:id="@+id/downloadButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Download Tide Data"
+            android:text="Save Tide Data"
             android:textColor="@android:color/black"
             android:background="@android:color/holo_blue_light"
             android:layout_marginEnd="8dp"/> <!-- Add margin for spacing -->

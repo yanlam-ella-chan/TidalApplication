@@ -7,15 +7,15 @@ public class TideData {
     private String locationId; // Change from locationName to locationId
     private double latitude;
     private double longitude;
-    private String downloadedBy;
+    private String savedBy;
     private LocalDateTime tideDate;
     private List<Double> tideLevels;
 
-    public TideData(String locationId, double latitude, double longitude, String downloadedBy, LocalDateTime tideDate, List<Double> tideLevels) {
+    public TideData(String locationId, double latitude, double longitude, String savedBy, LocalDateTime tideDate, List<Double> tideLevels) {
         this.locationId = locationId; // Use locationId
         this.latitude = latitude;
         this.longitude = longitude;
-        this.downloadedBy = downloadedBy;
+        this.savedBy = savedBy;
         this.tideDate = tideDate;
         this.tideLevels = tideLevels;
     }
@@ -33,8 +33,8 @@ public class TideData {
         return longitude;
     }
 
-    public String getDownloadedBy() {
-        return downloadedBy;
+    public String getSavedBy() {
+        return savedBy;
     }
 
     public LocalDateTime getTideDate() {

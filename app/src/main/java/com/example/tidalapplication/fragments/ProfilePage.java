@@ -41,7 +41,7 @@ public class ProfilePage extends Fragment {
 
         signInButton.setOnClickListener(v -> signIn());
         createAccountText.setOnClickListener(v -> navigateToCreateAccount());
-        viewDownloadsButton.setOnClickListener(v -> navigateToDownloadedData());
+        viewDownloadsButton.setOnClickListener(v -> navigateToSavedData());
 
         return view;
     }
@@ -81,7 +81,7 @@ public class ProfilePage extends Fragment {
                 .commit();
     }
 
-    private void navigateToDownloadedData() {
+    private void navigateToSavedData() {
         getParentFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, new DownloadedDataFragment())
                 .addToBackStack(null)

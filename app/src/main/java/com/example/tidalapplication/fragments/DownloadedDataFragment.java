@@ -20,23 +20,23 @@ import java.util.List;
 
 public class DownloadedDataFragment extends Fragment {
 
-    private List<String> downloadedTideData;
+    private List<String> savedTideData;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_downloaded_data, container, false);
 
-        ListView listView = view.findViewById(R.id.downloadedDataListView);
-        downloadedTideData = new ArrayList<>();
+        ListView listView = view.findViewById(R.id.savedDataListView);
+        savedTideData = new ArrayList<>();
         // Sample simplified data
-        downloadedTideData.add("Tide Data on 07 May 2025");
+        savedTideData.add("Tide Data on 07 May 2025");
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, downloadedTideData);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, savedTideData);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener((AdapterView<?> parent, View view1, int position, long id) -> {
-            String selectedData = downloadedTideData.get(position);
+            String selectedData = savedTideData.get(position);
             showTideDetails(selectedData);
         });
 

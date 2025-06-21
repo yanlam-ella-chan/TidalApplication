@@ -33,7 +33,7 @@ public class DownloadPeriodDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         Dialog dialog = super.onCreateDialog(savedInstanceState);
-        dialog.setTitle("Download Tide Data");
+        dialog.setTitle("Save Tide Data");
 
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.download_period_dialog, null);

@@ -9,19 +9,17 @@ public class Location {
     private double longitude;
     private String addedBy; // Changed from updatedBy to addedBy
     private String addedDateTime; // Field for timestamp
-    private List<Double> tideLevels; // New field for hourly tide levels
 
     // Required empty constructor for Firestore serialization
     public Location() {
     }
 
-    public Location(String name, double latitude, double longitude, String addedBy, String addedDateTime, List<Double> tideLevels) {
+    public Location(String name, double latitude, double longitude, String addedBy, String addedDateTime) {
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
         this.addedBy = addedBy; // Initialize addedBy
         this.addedDateTime = addedDateTime; // Initialize timestamp
-        this.tideLevels = tideLevels; // Initialize tide levels
     }
 
     @PropertyName("name")
@@ -49,11 +47,6 @@ public class Location {
         return addedDateTime;
     }
 
-    @PropertyName("tideLevels")
-    public List<Double> getTideLevels() {
-        return tideLevels; // Getter for tide levels
-    }
-
     // Optionally, you can set the properties if you need to update them later
     public void setName(String name) {
         this.name = name;
@@ -75,7 +68,4 @@ public class Location {
         this.addedDateTime = addedDateTime;
     }
 
-    public void setTideLevels(List<Double> tideLevels) { // Setter for tide levels
-        this.tideLevels = tideLevels;
-    }
 }

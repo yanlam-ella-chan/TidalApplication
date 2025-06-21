@@ -26,12 +26,16 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class BottomSheetFragment extends BottomSheetDialogFragment {
@@ -40,6 +44,8 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
     private ViewPager2 viewPager;
     private ViewPagerAdapter adapter;
     private String locationTitle;
+    private double selectedLocationLat;
+    private double selectedLocationLng;
     private TextView dateTimeText, locationNameText, tideLevelText, tideValueText;
 
     private Button pickDateTimeButton, downloadButton, addPlaceButton, cancelButton;
@@ -55,6 +61,13 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
     private List<Double> tideLevels;
 
     private String locationId;
+
+    private TideApiService tideApiService;
+
+    public interface NearestStationCallback {
+        void onStationFound(String stationCode);
+        void onFailure(String error);
+    }
 
     public interface OnPlaceAddedListener {
         void onPlaceAdded();
@@ -72,6 +85,14 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://data.weather.gov.hk/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        tideApiService = retrofit.create(TideApiService.class);
+
         View view = inflater.inflate(R.layout.fragment_bottom_sheet, container, false);
 
         // Initialize Firestore and Auth
@@ -96,10 +117,8 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
         if (locationTitle != null) {
             locationNameText.setText(locationTitle);
             getDialog().setTitle(locationTitle);
-            fetchLocationId(locationTitle);
+            fetchLocationInfo(locationTitle);
         }
-
-        fetchTideLevelsFromFirestore();
 
         // Change listener from dateTimeText to changeDateTimeIcon
         changeDateTimeIcon = view.findViewById(R.id.changeDateTimeIcon);
@@ -146,12 +165,15 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
         return view;
     }
 
-    private void fetchLocationId(String locationTitle) {
+    private void fetchLocationInfo(String locationTitle) {
         db.collection("locations").whereEqualTo("name", locationTitle).get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && !task.getResult().isEmpty()) {
                         DocumentSnapshot document = task.getResult().getDocuments().get(0);
                         locationId = document.getId(); // Get the location ID
+                        selectedLocationLat = document.getDouble("latitude");
+                        selectedLocationLng = document.getDouble("longitude");
+                        fetchTideLevelsFromApi(selectedLocationLat, selectedLocationLng);
                         if (isAdded()) { // Check if fragment is still attached
                             setupViewPager(viewPager); // Now call setupViewPager here
                         }
@@ -263,35 +285,8 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
                 double latitude = currentLocation.latitude;
                 double longitude = currentLocation.longitude;
 
-                // Define the tide levels
-                List<Double> tideLevels = new ArrayList<>();
-                tideLevels.add(1.34);
-                tideLevels.add(1.21);
-                tideLevels.add(1.16);
-                tideLevels.add(1.21);
-                tideLevels.add(1.43);
-                tideLevels.add(1.73);
-                tideLevels.add(2.04);
-                tideLevels.add(2.25);
-                tideLevels.add(2.30);
-                tideLevels.add(2.28);
-                tideLevels.add(2.16);
-                tideLevels.add(1.93);
-                tideLevels.add(1.60);
-                tideLevels.add(1.19);
-                tideLevels.add(0.81);
-                tideLevels.add(0.54);
-                tideLevels.add(0.45);
-                tideLevels.add(0.53);
-                tideLevels.add(0.72);
-                tideLevels.add(0.93);
-                tideLevels.add(1.10);
-                tideLevels.add(1.26);
-                tideLevels.add(1.40);
-                tideLevels.add(1.43);
-
                 // Create a location object with the current date and time
-                Location location = new Location(locationName, latitude, longitude, userEmail, getCurrentDateTime(), tideLevels);
+                Location location = new Location(locationName, latitude, longitude, userEmail, getCurrentDateTime());
 
                 // Save to Firestore
                 db.collection("locations").add(location)
@@ -325,7 +320,7 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
     private void setUpBottomSheet() {
         // Initialize selectedDateTime
         selectedDateTime = LocalDateTime.now(); // Ensure it's initialized here
-        updateTideLevel();
+        fetchLocationInfo(locationTitle);
 
         // Hide add place UI
         locationNameEditText.setVisibility(View.GONE);
@@ -357,21 +352,17 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
 
     private void updateTideLevel() {
         if (selectedDateTime == null) {
-            // Handle the case when selectedDateTime is null
             Log.w("BottomSheetFragment", "selectedDateTime is null, cannot update tide level.");
-            return; // Exit the method if null
+            return; // Exit if null
         }
 
         if (tideLevels != null && !tideLevels.isEmpty()) {
-            int hour = selectedDateTime.getHour(); // Get the hour from the selected date and time
-            if (hour >= 0 && hour < tideLevels.size()) {
-                double tideLevel = tideLevels.get(hour); // Get tide level for the selected hour
+                double tideLevel = tideLevels.get(0); // Adjust for zero-based index
                 dateTimeText.setText(selectedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
 
                 // Set the tide level text
                 tideLevelText.setText("Tide Level:");
                 tideValueText.setText(String.format("%.2fm", tideLevel)); // Format to 2 decimal places
-            }
         } else {
             tideLevelText.setText("Tide levels not available.");
             tideValueText.setText(""); // Clear the value
@@ -389,49 +380,185 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
     }
 
     private void downloadTideData(LocalDateTime date) {
-        if (tideLevels == null || tideLevels.isEmpty()) {
-            Toast.makeText(getContext(), "No tide levels available for download.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         String userEmail = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getEmail() : "Guest";
-        //String locationName = locationTitle; // Assuming locationTitle is the name of the location
         LatLng currentLocation = HomePage.currentMarker.getPosition();
         double latitude = currentLocation.latitude;
         double longitude = currentLocation.longitude;
 
-        // Create an object to save
-        TideData tideData = new TideData(locationId, latitude, longitude, userEmail, date, tideLevels);
+        fetchNearestTideStation(latitude, longitude, new NearestStationCallback() {
+            @Override
+            public void onStationFound(String stationCode) {
+                // Fetch tide levels for the entire day using the nearest station code
+                fetchAllTideLevelsForDay(date, userEmail, latitude, longitude, stationCode);
+            }
 
-        // Save to Firestore
-        db.collection("downloadedTideData").add(tideData)
+            @Override
+            public void onFailure(String error) {
+                Log.w("BottomSheetFragment", error);
+                // Use default station if necessary
+                fetchAllTideLevelsForDay(date, userEmail, latitude, longitude, "CCH");
+            }
+        });
+    }
+
+    private void fetchAllTideLevelsForDay(LocalDateTime date, String userEmail, double latitude, double longitude, String stationCode) {
+        int year = date.getYear();
+        int month = date.getMonthValue();
+        int day = date.getDayOfMonth();
+
+        Call<TideResponse> call = tideApiService.getTideLevels("HHOT", "en", "json", stationCode, year, month, day, 0);
+        call.enqueue(new retrofit2.Callback<TideResponse>() {
+            @Override
+            public void onResponse(Call<TideResponse> call, retrofit2.Response<TideResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    TideResponse tideResponse = response.body();
+                    List<List<String>> tideData = tideResponse.getData();
+                    if (!tideData.isEmpty()) {
+                        List<String> levels = tideData.get(0); // The first entry contains the data
+                        List<Double> allTideLevels = new ArrayList<>();
+
+                        // Parse tide levels starting from index 2
+                        for (int i = 2; i < levels.size(); i++) {
+                            allTideLevels.add(Double.parseDouble(levels.get(i)));
+                        }
+
+                        // Save tide data to Firestore with correct indices (1-24)
+                        saveTideDataToFirestore(allTideLevels, userEmail, latitude, longitude, date);
+                    } else {
+                        Log.w("BottomSheetFragment", "No tide data available.");
+                    }
+                } else {
+                    Log.w("BottomSheetFragment", "API response unsuccessful.");
+                }
+            }
+            @Override
+            public void onFailure(Call<TideResponse> call, Throwable t) {
+                Log.e("BottomSheetFragment", "Error fetching tide levels: " + t.getMessage());
+            }
+        });
+    }
+
+    private void saveTideDataToFirestore(List<Double> tideLevels, String userEmail, double latitude, double longitude, LocalDateTime dateTime) {
+        TideData tideData = new TideData(locationId, latitude, longitude, userEmail, dateTime, tideLevels);
+
+        db.collection("savedTideData").add(tideData)
                 .addOnSuccessListener(documentReference -> {
-                    Toast.makeText(getContext(), "Tide data downloaded successfully!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Tide data saved successfully!", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "Error downloading tide data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void fetchTideLevelsFromFirestore() {
-        // Assuming the location title corresponds to the document name in Firestore
-        db.collection("locations").whereEqualTo("name", locationTitle).get()
+
+    private void fetchTideLevelsFromApi(double lat, double lng) {
+        LocalDateTime now = LocalDateTime.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        int day = now.getDayOfMonth();
+        int hour = now.getHour();
+
+        // Handle the case where the hour is 0 (midnight)
+        if (now.getMinute() > 0) {
+            // If it's past midnight but before 1 AM, use hour 24
+            hour = (hour == 0) ? 24 : hour;
+        }
+
+        int finalHour = hour;
+        fetchNearestTideStation(lat, lng, new NearestStationCallback() {
+            @Override
+            public void onStationFound(String stationCode) {
+                Call<TideResponse> call = tideApiService.getTideLevels("HHOT", "en", "json", stationCode, year, month, day, finalHour);
+                call.enqueue(new retrofit2.Callback<TideResponse>() {
+                    @Override
+                    public void onResponse(Call<TideResponse> call, retrofit2.Response<TideResponse> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            TideResponse tideResponse = response.body();
+                            List<List<String>> tideData = tideResponse.getData();
+                            if (!tideData.isEmpty()) {
+                                tideLevels = new ArrayList<>();
+                                for (String tideLevel : tideData.get(0).subList(2, tideData.get(0).size())) {
+                                    tideLevels.add(Double.parseDouble(tideLevel));
+                                }
+                                updateTideLevel();
+                            } else {
+                                Log.w("BottomSheetFragment", "No tide data available.");
+                            }
+                        } else {
+                            Log.w("BottomSheetFragment", "API response unsuccessful.");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<TideResponse> call, Throwable t) {
+                        Log.e("BottomSheetFragment", "Error fetching tide levels: " + t.getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.w("BottomSheetFragment", error);
+                // Optionally handle the case where no tide station was found
+            }
+        });
+    }
+
+    private void fetchNearestTideStation(double latitude, double longitude, NearestStationCallback callback) {
+        db.collection("tideStations").get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        QuerySnapshot querySnapshot = task.getResult();
-                        if (querySnapshot != null && !querySnapshot.isEmpty()) {
-                            // Get the first document (you might want to handle multiple documents)
-                            DocumentSnapshot document = querySnapshot.getDocuments().get(0);
-                            tideLevels = (List<Double>) document.get("tideLevels"); // Retrieve tide levels
+                        double closestDistance = Double.MAX_VALUE;
+                        String nearestStationCode = null;
 
-                            // Update the tide level display based on the selected date and time
-                            updateTideLevel();
+                        for (DocumentSnapshot document : task.getResult()) {
+                            double stationLat = document.getDouble("latitude");
+                            double stationLon = document.getDouble("longitude");
+                            double distance = calculateDistance(latitude, longitude, stationLat, stationLon);
+
+                            if (distance < closestDistance) {
+                                closestDistance = distance;
+                                nearestStationCode = document.getString("code"); // Store the ID of the nearest station
+                            }
+                        }
+
+                        if (nearestStationCode != null) {
+                            callback.onStationFound(nearestStationCode);
                         } else {
-                            Log.w("BottomSheetFragment", "No matching documents found.");
+                            callback.onFailure("No tide stations found.");
                         }
                     } else {
-                        Log.w("BottomSheetFragment", "Error getting tide levels.", task.getException());
+                        callback.onFailure("Error fetching tide stations: " + task.getException());
                     }
                 });
     }
+
+    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Radius of the Earth in kilometers
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Convert to kilometers
+    }
+
+    /*private void fetchTideLevelsForStation(String stationId, String userEmail) {
+    // Assuming that the stationId is used to get tide levels
+    Call<TideResponse> call = tideApiService.getTideLevels("HHOT", "en", "json", stationId, year, month, day, 0);
+    call.enqueue(new retrofit2.Callback<TideResponse>() {
+        @Override
+        public void onResponse(Call<TideResponse> call, retrofit2.Response<TideResponse> response) {
+            // Handle the response as done before
+        }
+
+        @Override
+        public void onFailure(Call<TideResponse> call, Throwable t) {
+            Log.e("BottomSheetFragment", "Error fetching tide levels: " + t.getMessage());
+        }
+    });
+}*/
+
+
 }

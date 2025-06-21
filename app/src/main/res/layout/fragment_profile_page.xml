@@ -69,7 +69,7 @@
         android:id="@+id/viewDownloadsButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="View Downloaded Data"
+        android:text="View Saved Data"
         android:layout_marginTop="16dp"
         android:visibility="gone"/> <!-- Initially hidden -->
 

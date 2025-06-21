@@ -39,11 +39,11 @@ public class UserProfileFragment extends Fragment {
     private TextView noActivitiesTextView;
     private Button logoutButton;
     private TabHost tabHost;
-    private ListView downloadedDataListView;
+    private ListView savedDataListView;
     private ListView activitiesListView; // New ListView for activities
     private FirebaseAuth mAuth;
 
-    private List<TideInfo> downloadedTideData = new ArrayList<>();
+    private List<TideInfo> savedTideData = new ArrayList<>();
 
     @Nullable
     @Override
@@ -53,7 +53,7 @@ public class UserProfileFragment extends Fragment {
         userNameText = view.findViewById(R.id.userNameText);
         logoutButton = view.findViewById(R.id.logoutButton);
         tabHost = view.findViewById(R.id.tabHost);
-        downloadedDataListView = view.findViewById(R.id.downloadedDataListView);
+        savedDataListView = view.findViewById(R.id.savedDataListView);
         activitiesListView = view.findViewById(R.id.activitiesListView);
         noActivitiesTextView = view.findViewById(R.id.noActivitiesTextView);
 
@@ -66,7 +66,7 @@ public class UserProfileFragment extends Fragment {
 
         setupTabs();
         populateUserActivities(); // Populate activities
-        populateDownloadedTideData(); // Populate tide data
+        populateSavedTideData(); // Populate tide data
 
         return view;
     }
@@ -94,9 +94,9 @@ public class UserProfileFragment extends Fragment {
 
     private void setupTabs() {
         tabHost.setup();
-        TabHost.TabSpec spec1 = tabHost.newTabSpec("Downloaded Tide Info");
+        TabHost.TabSpec spec1 = tabHost.newTabSpec("Saved Tide Info");
         spec1.setContent(R.id.tab1);
-        spec1.setIndicator("Downloaded Tide Info");
+        spec1.setIndicator("Saved Tide Info");
         tabHost.addTab(spec1);
 
         TabHost.TabSpec spec2 = tabHost.newTabSpec("My Activities");
@@ -232,12 +232,12 @@ public class UserProfileFragment extends Fragment {
         }
     }
 
-    private void populateDownloadedTideData() {
+    private void populateSavedTideData() {
         String userEmail = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getEmail() : "Guest";
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("downloadedTideData")
-                .whereEqualTo("downloadedBy", userEmail)
+        db.collection("savedTideData")
+                .whereEqualTo("savedBy", userEmail)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -285,14 +285,14 @@ public class UserProfileFragment extends Fragment {
                         DocumentSnapshot document = task.getResult();
                         String locationName = document.getString("name");
                         TideInfo tideInfo = new TideInfo(locationName, formattedDate, tideLevels);
-                        downloadedTideData.add(tideInfo);
+                        savedTideData.add(tideInfo);
 
-                        com.example.tidalapplication.TideInfoAdapter adapter = new com.example.tidalapplication.TideInfoAdapter(getActivity(), downloadedTideData);
-                        downloadedDataListView.setAdapter(adapter);
+                        com.example.tidalapplication.TideInfoAdapter adapter = new com.example.tidalapplication.TideInfoAdapter(getActivity(), savedTideData);
+                        savedDataListView.setAdapter(adapter);
 
                         // Set item click listener
-                        downloadedDataListView.setOnItemClickListener((parent, view, position, id) -> {
-                            showTideDetails(downloadedTideData.get(position));
+                        savedDataListView.setOnItemClickListener((parent, view, position, id) -> {
+                            showTideDetails(savedTideData.get(position));
                         });
                     } else {
                         Log.w("UserProfileFragment", "Error getting location name.", task.getException());

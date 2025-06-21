@@ -6,7 +6,7 @@
     android:padding="16dp">
 
     <ListView
-        android:id="@+id/downloadedDataListView"
+        android:id="@+id/savedDataListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </LinearLayout>
