@@ -7,13 +7,17 @@ import androidx.fragment.app.Fragment;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TabHost;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,18 +80,45 @@ public class UserProfileFragment extends Fragment {
         dialog.setContentView(R.layout.dialog_tide_details);
         dialog.setTitle("Tide Details");
 
+        int dialogWidth = (int) (getResources().getDisplayMetrics().widthPixels * 0.9); // 90% of screen width
+        dialog.getWindow().setLayout(dialogWidth, LinearLayout.LayoutParams.WRAP_CONTENT);
+
         TextView locationNameText = dialog.findViewById(R.id.locationNameText);
         TextView dateText = dialog.findViewById(R.id.dateText);
-        TextView tideLevelsText = dialog.findViewById(R.id.tideLevelsText);
+        TableLayout tideLevelsTable = dialog.findViewById(R.id.tideLevelsTable);
 
         locationNameText.setText(tideInfo.locationName);
         dateText.setText(tideInfo.date);
 
-        StringBuilder tideLevelsString = new StringBuilder("Tide Levels:\n");
-        for (Double level : tideInfo.tideLevels) {
-            tideLevelsString.append(String.format("%.2f m\n", level));
+        // Clear previous rows if any
+        tideLevelsTable.removeViews(1, tideLevelsTable.getChildCount() - 1); // Keep the header
+
+        for (int i = 0; i < tideInfo.tideLevels.size(); i++) {
+            Double level = tideInfo.tideLevels.get(i);
+            String timeRange = String.format("%02d:00 - %02d:59", i, i); // e.g., "00:00 - 00:59"
+
+            TableRow tableRow = new TableRow(getActivity());
+
+            TextView timeText = new TextView(getActivity());
+            timeText.setText(timeRange);
+            timeText.setPadding(8, 8, 8, 8);
+            timeText.setLayoutParams(new TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 1f));
+            timeText.setGravity(Gravity.CENTER); // Center the text
+
+            TextView levelText = new TextView(getActivity());
+            levelText.setText(String.format("%.2f m", level));
+            levelText.setPadding(8, 8, 8, 8);
+            levelText.setLayoutParams(new TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 1f));
+            levelText.setGravity(Gravity.CENTER); // Center the text
+
+            tableRow.addView(timeText);
+            tableRow.addView(levelText);
+
+            tideLevelsTable.addView(tableRow);
         }
-        tideLevelsText.setText(tideLevelsString.toString());
+
+        Button closeButton = dialog.findViewById(R.id.closeButton);
+        closeButton.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }
@@ -251,12 +282,12 @@ public class UserProfileFragment extends Fragment {
                                     String monthString = (String) tideDateMap.get("month");
                                     int month = Month.valueOf(monthString.toUpperCase()).getValue();
                                     int day = ((Long) tideDateMap.get("dayOfMonth")).intValue();
-                                    int hour = ((Long) tideDateMap.get("hour")).intValue();
-                                    int minute = ((Long) tideDateMap.get("minute")).intValue();
 
-                                    LocalDateTime tideDate = LocalDateTime.of(year, month, day, hour, minute);
-                                    String formattedDate = tideDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")) + " to " +
-                                            tideDate.plusDays(1).format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm"));
+                                    // Create a LocalDateTime object
+                                    LocalDateTime tideDate = LocalDateTime.of(year, month, day, 0, 0); // Set hour and minute to 0
+
+                                    // Format the date for display
+                                    String formattedDate = tideDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"));
 
                                     List<Double> tideLevels = (List<Double>) document.get("tideLevels");
                                     fetchLocationName(locationId, formattedDate, tideLevels);

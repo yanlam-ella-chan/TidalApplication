@@ -15,9 +15,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -49,7 +52,7 @@ public class CommentsFragment extends Fragment {
         TextView addCommentTextView = view.findViewById(R.id.addCommentTextView); // Initialize TextView
 
         comments = new ArrayList<>();
-        adapter = new CommentsAdapter(comments);
+        adapter = new CommentsAdapter(comments, "");
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -75,26 +78,67 @@ public class CommentsFragment extends Fragment {
 
     private void fetchCommentsFromFirebase() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("comments")
-                .whereEqualTo("locationId", locationId) // Change from locationName to locationId
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        comments.clear();
-                        for (DocumentSnapshot document : task.getResult()) {
-                            String commentText = document.getString("comment");
-                            String addedBy = document.getString("addedBy");
-                            String addedDateTime = document.getString("addedDateTime");
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-                            // Create and add a new Comment object
-                            comments.add(new Comment(commentText, addedBy, addedDateTime));
-                        }
-                        updateUI();
+        if (currentUser != null) {
+            // Get the current user's role
+            String userId = currentUser.getUid();
+            db.collection("userRoles").document(userId).get().addOnCompleteListener(roleTask -> {
+                if (roleTask.isSuccessful() && roleTask.getResult() != null) {
+                    String role = roleTask.getResult().getString("role");
+
+                    // Fetch comments based on user role
+                    if ("admin".equals(role)) {
+                        // Admin can see all comments
+                        db.collection("comments")
+                                .whereEqualTo("locationId", locationId)
+                                .get()
+                                .addOnCompleteListener(commentsTask -> {
+                                    processComments(commentsTask, true);
+                                    adapter = new CommentsAdapter(comments, role);
+                                    recyclerView.setAdapter(adapter);
+                                });
                     } else {
-                        Toast.makeText(getContext(), "Error fetching comments.", Toast.LENGTH_SHORT).show();
+                        // Regular users only see approved comments
+                        db.collection("comments")
+                                .whereEqualTo("locationId", locationId)
+                                .get()
+                                .addOnCompleteListener(commentsTask -> {
+                                    processComments(commentsTask, false);
+                                    // Initialize adapter with user role
+                                    adapter = new CommentsAdapter(comments, role);
+                                    recyclerView.setAdapter(adapter);
+                                });
                     }
-                });
+                }
+            });
+        }
     }
+
+    private void processComments(Task<QuerySnapshot> task, boolean isAdmin) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String currentUserEmail = currentUser != null ? currentUser.getEmail() : null;
+        if (task.isSuccessful()) {
+            comments.clear();
+            for (DocumentSnapshot document : task.getResult()) {
+                String commentId = document.getId();
+                String commentText = document.getString("comment");
+                String addedBy = document.getString("addedBy");
+                String addedDateTime = document.getString("addedDateTime");
+                String approval = document.getString("approval");
+
+                // Create a new Comment object
+                Comment comment = new Comment(commentId, commentText, addedBy, addedDateTime, approval);
+                if (isAdmin || "approved".equals(approval) || (currentUserEmail != null && currentUserEmail.equals(addedBy))) {
+                    comments.add(comment);
+                }
+            }
+            updateUI();
+        } else {
+            Toast.makeText(getContext(), "Error fetching comments.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     private void updateUI() {
         if (comments.isEmpty()) {
@@ -121,12 +165,13 @@ public class CommentsFragment extends Fragment {
         data.put("comment", comment);
         data.put("addedBy", userEmail);
         data.put("addedDateTime", addedDateTime);
-        data.put("locationId", locationId); // Save locationId instead of locationName
+        data.put("locationId", locationId);
+        data.put("approval", "pending");
 
         db.collection("comments").add(data)
                 .addOnSuccessListener(documentReference -> {
                     // Create a new Comment object and add it to the list
-                    comments.add(new Comment(comment, userEmail, addedDateTime));
+                    comments.add(new Comment(comment, userEmail, addedDateTime, "pending"));
                     adapter.notifyItemInserted(comments.size() - 1); // Notify adapter
                     Toast.makeText(getContext(), "Comment added!", Toast.LENGTH_SHORT).show();
                 })

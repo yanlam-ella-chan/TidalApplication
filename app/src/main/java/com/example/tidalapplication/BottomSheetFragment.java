@@ -173,7 +173,7 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
                         locationId = document.getId(); // Get the location ID
                         selectedLocationLat = document.getDouble("latitude");
                         selectedLocationLng = document.getDouble("longitude");
-                        fetchTideLevelsFromApi(selectedLocationLat, selectedLocationLng);
+                        fetchTideLevelsFromApi(selectedLocationLat, selectedLocationLng,null);
                         if (isAdded()) { // Check if fragment is still attached
                             setupViewPager(viewPager); // Now call setupViewPager here
                         }
@@ -331,8 +331,8 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
     private void showDateTimePicker() {
         DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(),
                 (view, year, month, dayOfMonth) -> {
-                    LocalDateTime newDateTime = selectedDateTime.withYear(year).withMonth(month + 1).withDayOfMonth(dayOfMonth);
-                    showTimePicker(newDateTime);
+                    selectedDateTime = selectedDateTime.withYear(year).withMonth(month + 1).withDayOfMonth(dayOfMonth);
+                    showTimePicker(selectedDateTime);
                 },
                 selectedDateTime.getYear(), selectedDateTime.getMonthValue() - 1, selectedDateTime.getDayOfMonth());
 
@@ -343,7 +343,8 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
         TimePickerDialog timePickerDialog = new TimePickerDialog(getContext(),
                 (view, hourOfDay, minute) -> {
                     selectedDateTime = newDateTime.withHour(hourOfDay).withMinute(minute);
-                    updateTideLevel();
+                    updateTideLevel(); // Call to update tide level based on the picked date and time
+                    fetchTideLevelsFromApi(selectedLocationLat, selectedLocationLng, selectedDateTime);
                 },
                 selectedDateTime.getHour(), selectedDateTime.getMinute(), true);
 
@@ -451,8 +452,16 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
     }
 
 
-    private void fetchTideLevelsFromApi(double lat, double lng) {
-        LocalDateTime now = LocalDateTime.now();
+    private void fetchTideLevelsFromApi(double lat, double lng, LocalDateTime selectedDateTime) {
+
+        LocalDateTime now;
+
+        if (selectedDateTime == null) {
+            now = LocalDateTime.now();
+        } else {
+            now = selectedDateTime;
+        }
+
         int year = now.getYear();
         int month = now.getMonthValue();
         int day = now.getDayOfMonth();

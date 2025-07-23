@@ -178,7 +178,11 @@ public class HomePage extends Fragment implements OnMapReadyCallback, BottomShee
             LatLng position = locations.get(i);
             TextView textView = textViews.get(i); // Get the corresponding TextView
             positionTextView(textView, position); // Position the TextView correctly based on LatLng
-            textView.setVisibility(View.VISIBLE); // Show TextView when zoom is >= 14
+            if (currentZoom >= 12) {
+                textView.setVisibility(View.VISIBLE); // Show TextView when zoom is >= 14
+            } else {
+                textView.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -200,14 +204,16 @@ public class HomePage extends Fragment implements OnMapReadyCallback, BottomShee
     }
 
     private TextView createTextView(String name) {
-        // Use requireContext() to ensure a non-null context
-        TextView textView = new TextView(requireContext());
+        // Use getContext() safely
+        if (getContext() == null) {
+            return new TextView(getActivity()); // Return a default TextView or handle appropriately
+        }
+
+        TextView textView = new TextView(getContext());
         textView.setText(name);
         textView.setTextColor(Color.WHITE);
         textView.setTextSize(12);
         textView.setVisibility(View.VISIBLE);
-
-        // Set fixed width and height
         textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         textView.setPadding(10, 10, 10, 10); // Optional padding for better touch area
         textView.setClickable(true); // Ensure it's clickable

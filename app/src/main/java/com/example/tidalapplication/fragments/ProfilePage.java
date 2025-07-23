@@ -18,6 +18,8 @@ import com.example.tidalapplication.R;
 import com.example.tidalapplication.UserSession;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class ProfilePage extends Fragment {
 
@@ -58,13 +60,47 @@ public class ProfilePage extends Fragment {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        UserSession.isSignedIn = true; // Set the user as signed in
-                        Toast.makeText(getActivity(), "Sign In Successful", Toast.LENGTH_SHORT).show();
-                        navigateToUserProfile(); // Navigate to user profile fragment
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            String userId = user.getUid();
+                            checkUserRole(userId);
+                        }
                     } else {
                         Toast.makeText(getActivity(), "Invalid email or password", Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void checkUserRole(String userId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("userRoles").document(userId).get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            String role = document.getString("role");
+                            handleUserRole(role);
+                        } else {
+                            Toast.makeText(getActivity(), "User role not found", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getActivity(), "Failed to fetch user role", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void handleUserRole(String role) {
+        UserSession.isSignedIn = true; // Set the user as signed in
+
+        if ("admin".equals(role)) {
+            Toast.makeText(getActivity(), "Admin signed in", Toast.LENGTH_SHORT).show();
+            navigateToUserProfile(); // Navigate to user profile fragment
+        } else if ("member".equals(role)) {
+            navigateToUserProfile(); // Navigate to user profile fragment
+        } else {
+            Toast.makeText(getActivity(), "Unknown role: " + role, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void navigateToUserProfile() {

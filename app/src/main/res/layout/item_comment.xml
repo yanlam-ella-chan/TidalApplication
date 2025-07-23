@@ -29,4 +29,38 @@
         android:id="@+id/commentTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
+
+    <!-- Buttons for approving/rejecting comments -->
+    <LinearLayout
+        android:id="@+id/buttonLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/approveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/holo_blue_light"
+            android:text="Approve"
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/rejectButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/holo_red_light"
+            android:text="Reject"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/approvalStatusTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@android:color/holo_red_light"
+            android:visibility="gone"/>
+    </LinearLayout>
 </LinearLayout>

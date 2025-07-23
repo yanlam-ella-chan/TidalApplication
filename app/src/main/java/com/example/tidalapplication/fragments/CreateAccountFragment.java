@@ -14,6 +14,10 @@ import android.widget.Toast;
 
 import com.example.tidalapplication.R;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class CreateAccountFragment extends Fragment {
 
@@ -21,6 +25,7 @@ public class CreateAccountFragment extends Fragment {
     private EditText emailEditText, passwordEditText;
     private Button createAccountButton, backButton;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
 
     @Nullable
     @Override
@@ -34,7 +39,8 @@ public class CreateAccountFragment extends Fragment {
         createAccountButton = view.findViewById(R.id.createAccountButton);
         backButton = view.findViewById(R.id.backButton);
 
-        mAuth = FirebaseAuth.getInstance(); // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         createAccountButton.setOnClickListener(v -> createAccount());
         backButton.setOnClickListener(v -> navigateBackToSignIn());
@@ -55,8 +61,17 @@ public class CreateAccountFragment extends Fragment {
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Toast.makeText(getActivity(), "Account Created Successfully", Toast.LENGTH_SHORT).show();
-                        navigateBackToSignIn(); // Navigate back to sign in after successful account creation
+                        String userId = mAuth.getCurrentUser().getUid();
+                        Map<String, String> userRole = new HashMap<>();
+                        userRole.put("role", "member");
+                        db.collection("userRoles").document(userId).set(userRole)
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(getActivity(), "Account Created Successfully", Toast.LENGTH_SHORT).show();
+                                    navigateBackToSignIn(); // Navigate back to sign in after successful account creation
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(getActivity(), "Failed to save user role: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
                     } else {
                         String error = task.getException() != null ? task.getException().getMessage() : "Unknown error";
                         Toast.makeText(getActivity(), "Account Creation Failed: " + error, Toast.LENGTH_SHORT).show();
