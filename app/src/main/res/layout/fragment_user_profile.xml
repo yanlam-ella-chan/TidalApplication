@@ -54,39 +54,42 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <LinearLayout
-                    android:id="@+id/tab1"
+            <LinearLayout
+                android:id="@+id/tab1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <ListView
+                    android:id="@+id/savedDataListView"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    android:layout_height="match_parent"/>
+            </LinearLayout>
 
-                    <ListView
-                        android:id="@+id/savedDataListView"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"/>
-                </LinearLayout>
+            <LinearLayout
+                android:id="@+id/tab2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:id="@+id/tab2"
+                <TextView
+                    android:id="@+id/noActivitiesTextView"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    android:layout_height="wrap_content"
+                    android:text="No activities"
+                    android:textSize="20sp"
+                    android:gravity="center"
+                    android:visibility="gone"/>
 
-                    <TextView
-                        android:id="@+id/noActivitiesTextView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="No activities"
-                        android:textSize="20sp"
-                        android:gravity="center"
-                        android:visibility="gone"/> <!-- Initially hidden -->
+                <ListView
+                    android:id="@+id/activitiesListView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            </LinearLayout>
 
-                    <ListView
-                        android:id="@+id/activitiesListView"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"/>
-                </LinearLayout>
-            </FrameLayout>
-        </LinearLayout>
-    </TabHost>
+
+
+    </FrameLayout>
 </LinearLayout>
+    </TabHost>
+    </LinearLayout>

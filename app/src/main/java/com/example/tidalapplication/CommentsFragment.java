@@ -112,6 +112,16 @@ public class CommentsFragment extends Fragment {
                     }
                 }
             });
+        } else {
+            db.collection("comments")
+                    .whereEqualTo("locationId", locationId)
+                    .get()
+                    .addOnCompleteListener(commentsTask -> {
+                        processComments(commentsTask, false);
+                        // Initialize adapter with user role
+                        adapter = new CommentsAdapter(comments, "");
+                        recyclerView.setAdapter(adapter);
+                    });
         }
     }
 

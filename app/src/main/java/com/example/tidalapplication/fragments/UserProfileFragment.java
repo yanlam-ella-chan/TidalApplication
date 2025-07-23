@@ -26,6 +26,7 @@ import com.example.tidalapplication.UserSession;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -68,7 +69,8 @@ public class UserProfileFragment extends Fragment {
 
         logoutButton.setOnClickListener(v -> logout());
 
-        setupTabs();
+        checkUserRole();
+
         populateUserActivities(); // Populate activities
         populateSavedTideData(); // Populate tide data
 
@@ -122,8 +124,180 @@ public class UserProfileFragment extends Fragment {
 
         dialog.show();
     }
+    private void checkUserRole() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-    private void setupTabs() {
+        if (currentUser != null) {
+            // Get the current user's role
+            String userId = currentUser.getUid();
+            db.collection("userRoles").document(userId).get().addOnCompleteListener(roleTask -> {
+                if (roleTask.isSuccessful() && roleTask.getResult() != null) {
+                    String role = roleTask.getResult().getString("role");
+
+                    if ("admin".equals(role)) {
+                        //setupAdminTabs(); // Setup tabs for admin
+                    } else {
+                        setupUserTabs(); // Setup tabs for regular users
+                    }
+                }
+            });
+        }
+    }
+    /*private void setupAdminTabs() {
+        tabHost.setup();
+        TabHost.TabSpec spec = tabHost.newTabSpec("Add Location Requests");
+        spec.setContent(R.id.tab3); // Layout for the admin tab
+        spec.setIndicator("Add Location Requests");
+        tabHost.addTab(spec);
+
+        tabHost.setCurrentTab(0); // Show default tab
+
+
+        // Fetch and display all pending locations
+        fetchPendingLocations();
+    }
+
+    private void fetchPendingLocations() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("locations")
+                .whereEqualTo("approval", "pending")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<String> pendingLocations = new ArrayList<>();
+                        for (DocumentSnapshot document : task.getResult()) {
+                            String locationName = document.getString("name");
+                            String addedBy = document.getString("addedBy");
+                            String addedDateTime = document.getString("addedDateTime");
+                            String documentId = document.getId(); // Get the document ID
+
+                            // Check for null values before formatting
+                            if (addedBy != null && locationName != null) {
+                                // Format: "<addedBy> created a location <locationName> | <addedDateTime> | <documentId>"
+                                String displayText = String.format("%s created a location %s | %s | %s",
+                                        addedBy.split("@")[0], locationName, addedDateTime, documentId);
+                                pendingLocations.add(displayText); // Add the formatted string
+                            } else {
+                                Log.w("UserProfileFragment", "One of the fields is null for document: " + document.getId());
+                            }
+                        }
+                        updatePendingLocationsListView(pendingLocations);
+                    } else {
+                        Log.w("UserProfileFragment", "Error fetching pending locations.", task.getException());
+                    }
+                });
+    }
+
+    private void updatePendingLocationsListView(List<String> pendingLocations) {
+        ListView pendingLocationsListView = getView().findViewById(R.id.pendingLocationsListView);
+
+        // Create an ArrayAdapter with the custom layout
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), R.layout.item_pending_location, pendingLocations) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                // Inflate the view if it has not been created yet
+                if (convertView == null) {
+                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_pending_location, parent, false);
+                }
+
+                TextView locationDescriptionTextView = convertView.findViewById(R.id.locationDescriptionTextView);
+                TextView dateTimeTextView = convertView.findViewById(R.id.dateTimeTextView);
+                Button approveButton = convertView.findViewById(R.id.approveButton);
+                Button rejectButton = convertView.findViewById(R.id.rejectButton);
+                TextView statusTextView = convertView.findViewById(R.id.statusTextView); // New TextView for status
+
+                // Split the string into description and dateTime
+                String[] parts = pendingLocations.get(position).split(" \\| ");
+                String locationDescription = parts[0];
+                String locationId = parts[2];
+                locationDescriptionTextView.setText(locationDescription); // Description
+                dateTimeTextView.setText(parts.length > 1 ? parts[1] : ""); // DateTime
+                statusTextView.setVisibility(View.GONE); // Initially hide the status text
+
+                // Set onClickListener for the approve button
+                approveButton.setOnClickListener(v -> {
+                    approveLocation(locationId, position, statusTextView, approveButton, rejectButton);
+                });
+
+                // Set onClickListener for the reject button
+                rejectButton.setOnClickListener(v -> {
+                    rejectLocation(locationId, position, statusTextView, approveButton, rejectButton);
+                });
+
+                return convertView;
+            }
+        };
+
+
+        pendingLocationsListView.setAdapter(adapter);
+
+        // Show or hide the "No Requests" message
+        TextView noRequestsTextView = getView().findViewById(R.id.noRequestsTextView);
+        if (pendingLocations.isEmpty()) {
+            noRequestsTextView.setVisibility(View.VISIBLE); // Show "No Requests"
+            pendingLocationsListView.setVisibility(View.GONE); // Hide the ListView
+        } else {
+            noRequestsTextView.setVisibility(View.GONE); // Hide "No Requests"
+            pendingLocationsListView.setVisibility(View.VISIBLE); // Show the ListView
+        }
+    }
+
+    private void approveLocation(String locationId, int position, TextView statusTextView, Button approveButton, Button rejectButton) {
+        Log.d("UserProfileFragment", "Approving location ID: " + locationId); // Log the document ID
+
+        if (locationId.isEmpty()) {
+            Log.e("UserProfileFragment", "Invalid location ID for approval.");
+            return; // Exit if the ID is invalid
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("locations").document(locationId)
+                .update("approval", "approved")
+                .addOnSuccessListener(aVoid -> {
+                    approveButton.setVisibility(View.GONE);
+                    rejectButton.setVisibility(View.GONE);
+                    statusTextView.setText("Approved");
+                    statusTextView.setVisibility(View.VISIBLE);
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("UserProfileFragment", "Error approving location.", e);
+                });
+    }
+
+    private void rejectLocation(String locationId, int position, TextView statusTextView, Button approveButton, Button rejectButton) {
+        Log.d("UserProfileFragment", "Rejecting location ID: " + locationId); // Log the document ID
+
+        if (locationId.isEmpty()) {
+            Log.e("UserProfileFragment", "Invalid location ID for rejection.");
+            return; // Exit if the ID is invalid
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("locations").document(locationId)
+                .update("approval", "rejected")
+                .addOnSuccessListener(aVoid -> {
+                    approveButton.setVisibility(View.GONE);
+                    rejectButton.setVisibility(View.GONE);
+                    statusTextView.setText("Rejected");
+                    statusTextView.setVisibility(View.VISIBLE);
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("UserProfileFragment", "Error rejecting location.", e);
+                });
+    }
+
+    private String extractLocationId(String locationDescription) {
+        // The format is "<addedBy> created a location <locationName> | <addedDateTime> | <documentId>"
+        String[] parts = locationDescription.split(" \\| ");
+        if (parts.length == 4) { // Ensure we have 4 parts
+            return parts[3]; // Return the document ID
+        }
+        return ""; // Return empty if not valid
+    }*/
+
+    private void setupUserTabs() {
         tabHost.setup();
         TabHost.TabSpec spec1 = tabHost.newTabSpec("Saved Tide Info");
         spec1.setContent(R.id.tab1);
@@ -151,7 +325,7 @@ public class UserProfileFragment extends Fragment {
                         for (DocumentSnapshot document : task.getResult()) {
                             String locationName = document.getString("name");
                             String addedDateTime = document.getString("addedDateTime");
-                            activities.add("You added a " + locationName + ". " + addedDateTime);
+                            activities.add("You added a location -- " + locationName + ". " + addedDateTime);
                         }
                         // Fetch comments and photos after locations
                         fetchUserComments(activities, userEmail);
@@ -252,15 +426,31 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void updateActivitiesListView(List<String> activities) {
-        if (activities.isEmpty()) {
-            noActivitiesTextView.setVisibility(View.VISIBLE); // Show "No activities"
-            activitiesListView.setVisibility(View.GONE); // Hide the ListView
-        } else {
-            noActivitiesTextView.setVisibility(View.GONE); // Hide "No activities"
-            activitiesListView.setVisibility(View.VISIBLE); // Show the ListView
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, activities);
-            activitiesListView.setAdapter(adapter); // Update the activities ListView
-        }
+        // Check if the user is an admin
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        String userId = currentUser != null ? currentUser.getUid() : null;
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("userRoles").document(userId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                String role = task.getResult().getString("role");
+
+                if (!"admin".equals(role)) { // Only update if the user is not an admin
+                    if (activities.isEmpty()) {
+                        noActivitiesTextView.setVisibility(View.VISIBLE); // Show "No activities"
+                        activitiesListView.setVisibility(View.GONE); // Hide the ListView
+                    } else {
+                        noActivitiesTextView.setVisibility(View.GONE); // Hide "No activities"
+                        activitiesListView.setVisibility(View.VISIBLE); // Show the ListView
+                        ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, activities);
+                        activitiesListView.setAdapter(adapter); // Update the activities ListView
+                    }
+                } else {
+                    noActivitiesTextView.setVisibility(View.GONE); // Always hide for admin users
+                    activitiesListView.setVisibility(View.GONE); // Optionally hide the activities list for admin
+                }
+            }
+        });
     }
 
     private void populateSavedTideData() {

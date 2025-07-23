@@ -287,6 +287,7 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
 
                 // Create a location object with the current date and time
                 Location location = new Location(locationName, latitude, longitude, userEmail, getCurrentDateTime());
+                location.setApproval("pending");
 
                 // Save to Firestore
                 db.collection("locations").add(location)

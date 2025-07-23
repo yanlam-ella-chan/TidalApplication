@@ -127,14 +127,20 @@ public class HomePage extends Fragment implements OnMapReadyCallback, BottomShee
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            locationName = document.getString("name");
-                            double latitude = document.getDouble("latitude");
-                            double longitude = document.getDouble("longitude");
-                            LatLng position = new LatLng(latitude, longitude);
+                            // Check if the approval field exists and is equal to "approved"
+                            String approvalStatus = document.getString("approval");
+                            if ("approved".equals(approvalStatus)) {
+                                locationName = document.getString("name");
+                                double latitude = document.getDouble("latitude");
+                                double longitude = document.getDouble("longitude");
+                                LatLng position = new LatLng(latitude, longitude);
 
-                            locations.add(position);
-                            locationNames.add(locationName);
-                            addSpecialSpot(position, locationName); // Pass the name for display
+                                locations.add(position);
+                                locationNames.add(locationName);
+                                addSpecialSpot(position, locationName); // Pass the name for display
+                            } else {
+                                Log.d("HomePage", "Location " + document.getString("name") + " is not approved and will not be shown.");
+                            }
                         }
                     } else {
                         Log.w("HomePage", "Error getting documents.", task.getException());

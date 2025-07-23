@@ -9,6 +9,7 @@ public class Location {
     private double longitude;
     private String addedBy; // Changed from updatedBy to addedBy
     private String addedDateTime; // Field for timestamp
+    private String approval;
 
     // Required empty constructor for Firestore serialization
     public Location() {
@@ -20,8 +21,16 @@ public class Location {
         this.longitude = longitude;
         this.addedBy = addedBy; // Initialize addedBy
         this.addedDateTime = addedDateTime; // Initialize timestamp
+        this.approval = "pending";
     }
 
+    public String getApproval() {
+        return approval;
+    }
+
+    public void setApproval(String approval) {
+        this.approval = approval;
+    }
     @PropertyName("name")
     public String getName() {
         return name;
